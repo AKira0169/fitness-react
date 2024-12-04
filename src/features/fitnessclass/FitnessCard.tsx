@@ -19,7 +19,9 @@ function FitnessCard({
   id,
 }: Props) {
   return (
-    <div className="w-[350px] rounded-lg border border-gray-200 bg-white p-6 shadow">
+    <div
+      className={`w-[350px] rounded-lg border border-gray-200 bg-white p-6 shadow ${maxAttendees === 0 ? "opacity-50" : ""}`}
+    >
       <a href="#">
         <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900">
           {title}{" "}
