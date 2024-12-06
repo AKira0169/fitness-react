@@ -1,11 +1,11 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import AppLayout from "./ui/AppLayout";
-import Home, { loader as homeLoader } from "./pages/Home";
+import Home from "./pages/Home";
 import Dashboard, { loader as dashboardLoader } from "./pages/Dashboard";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/Protected"; // Import the ProtectedRoute component
 import Register from "./pages/Register";
-import Details, { loader as detailsLoader } from "./pages/Details";
+import Details from "./pages/Details";
 
 const router = createBrowserRouter([
   {
@@ -15,9 +15,6 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <Home />,
-
-        loader: homeLoader,
-        errorElement: <div>No Class Found</div>,
       },
       {
         path: "/dashboard",
@@ -44,8 +41,6 @@ const router = createBrowserRouter([
             <Details />
           </ProtectedRoute>
         ),
-        loader: detailsLoader,
-        errorElement: <div>404</div>,
       },
       {
         path: "*",

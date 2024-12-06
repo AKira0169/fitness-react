@@ -1,29 +1,45 @@
-import { useLoaderData } from "react-router-dom";
+import { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import FitnessCard from "../features/fitnessclass/FitnessCard";
-import { getAllClasses } from "../services/fitnessAPI";
+import { fetchClasses } from "../features/fitnessclass/fitnessSlice";
+import { RootState, AppDispatch } from "../store";
+import Loader from "../ui/Loader";
 
 function Home() {
-  const classes = useLoaderData();
+  const dispatch = useDispatch<AppDispatch>();
+  const { classes, status, error } = useSelector(
+    (state: RootState) => state.fitness,
+  );
+
+  useEffect(() => {
+    if (status === "idle") {
+      dispatch(fetchClasses());
+    }
+  }, [dispatch, status]);
+
+  if (status === "loading") {
+    return <Loader />;
+  }
+
+  if (status === "failed") {
+    return <p>Error: {error}</p>;
+  }
+
   return (
     <div className="flex flex-col flex-wrap items-center justify-center gap-x-6 md:flex-row">
-      {classes.map((classItem: any) => (
+      {classes.map((classItem) => (
         <FitnessCard
           key={classItem.id}
           title={classItem.title}
           description={classItem.description}
           date={classItem.date}
           time={classItem.time}
-          maxAttendees={classItem.maxAttendees - classItem.bookings.length}
+          maxAttendees={classItem.remainingSpots}
           id={classItem.id}
         />
       ))}
     </div>
   );
-}
-
-export async function loader() {
-  const classes = await getAllClasses();
-  return classes;
 }
 
 export default Home;

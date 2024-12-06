@@ -1,40 +1,46 @@
+import { useParams } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../store"; // Adjust the path as needed
+import { useState } from "react";
 import { bookClass } from "../services/bookingAPI";
-import { getSingleClass } from "../services/fitnessAPI";
-import { useLoaderData } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { updateRemainingSpots } from "../features/fitnessclass/fitnessSlice";
 
 function Details() {
-  const classDetails = useLoaderData();
-  const [isBooking, setIsBooking] = useState(false); // Tracks booking state
-  const [bookingStatus, setBookingStatus] = useState<string | null>(null); // Tracks booking success/error
+  const { id } = useParams<{ id: string }>();
+  const [isBooking, setIsBooking] = useState(false);
+  const [bookingStatus, setBookingStatus] = useState<string | null>(null);
+  const dispatch = useDispatch();
 
-  // Trigger the booking API call when `isBooking` changes to `true`
-  useEffect(() => {
-    if (isBooking) {
-      async function handleBooking() {
-        try {
-          const response = await bookClass(classDetails.id);
+  const classDetails = useSelector((state: RootState) =>
+    state.fitness.classes.find(
+      (fitnessClass) => fitnessClass.id === Number(id),
+    ),
+  );
 
-          if (response?.message) {
-            setBookingStatus(response.message); // Display success message from API
-          } else {
-            setBookingStatus("Booking successful!");
-          }
-        } catch (error: any) {
-          console.error("Booking failed:", error);
-          setBookingStatus(error.message || "An unexpected error occurred.");
-        } finally {
-          setIsBooking(false); // Reset booking state
-        }
+  if (!classDetails) {
+    return <p className="p-5 text-center text-red-500">Class not found!</p>;
+  }
+
+  const handleBookClick = async () => {
+    if (isBooking) return;
+
+    setIsBooking(true);
+
+    try {
+      const response = await bookClass(classDetails.id);
+
+      if (response?.message) {
+        setBookingStatus(response.message);
+      } else {
+        setBookingStatus("Booking successful!");
+        dispatch(updateRemainingSpots({ id: classDetails.id, adjustment: -1 }));
       }
-
-      handleBooking();
+    } catch (error: any) {
+      console.error("Booking failed:", error);
+      setBookingStatus(error.message || "An unexpected error occurred.");
+    } finally {
+      setIsBooking(false); // Reset booking state
     }
-  }, [isBooking, classDetails.id]);
-
-  const handleBookClick = () => {
-    setIsBooking(true); // Trigger the booking flow
-    setBookingStatus(null); // Clear any previous status
   };
 
   return (
@@ -52,8 +58,7 @@ function Details() {
             <strong>Time:</strong> {classDetails.time}
           </p>
           <p>
-            <strong>Spots Left:</strong>{" "}
-            {classDetails.maxAttendees - classDetails.bookings.length}
+            <strong>Spots Left:</strong> {classDetails.remainingSpots}
           </p>
         </div>
 
@@ -61,13 +66,14 @@ function Details() {
           onClick={handleBookClick}
           disabled={isBooking}
           className={`w-full rounded px-4 py-2 text-sm font-medium text-white ${
-            isBooking ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"
+            isBooking
+              ? "cursor-not-allowed bg-gray-400"
+              : "bg-blue-500 hover:bg-blue-600"
           }`}
         >
           {isBooking ? "Booking..." : "Book Class"}
         </button>
 
-        {/* Show booking status */}
         {bookingStatus && (
           <p
             className={`mt-4 text-center font-medium ${
@@ -82,20 +88,6 @@ function Details() {
       </div>
     </div>
   );
-}
-export async function loader({ params }: { params: any }) {
-  try {
-    const { id } = params;
-    const classDetails = await getSingleClass(id);
-
-    if (!classDetails) {
-      throw new Error("Class not found");
-    }
-
-    return classDetails; // Return the class details for the component
-  } catch (error) {
-    throw new Response("Failed to load class details", { status: 500 });
-  }
 }
 
 export default Details;

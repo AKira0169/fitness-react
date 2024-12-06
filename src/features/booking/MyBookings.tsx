@@ -1,6 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
 import { deleteBookClass } from "../../services/bookingAPI"; // Adjust the path if necessary
 import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { updateRemainingSpots } from "../fitnessclass/fitnessSlice";
 
 type Props = {
   id: number;
@@ -24,6 +26,7 @@ function MyBookings({
   const [isDeleting, setIsDeleting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const navigate = useNavigate(); // React Router hook for navigation
+  const dispatch = useDispatch();
 
   const handleDelete = async () => {
     try {
@@ -31,6 +34,7 @@ function MyBookings({
       setErrorMessage(null);
 
       await deleteBookClass(id); // Call the delete function
+      dispatch(updateRemainingSpots({ id: fitnessId, adjustment: 1 }));
 
       // Navigate back to the dashboard or another page after successful deletion
       navigate("/dashboard"); // Adjust the path as necessary
